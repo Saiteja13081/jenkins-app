@@ -1,24 +1,41 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = "saiteja2644/myapp:v1" 
+    }
+
     stages {
         stage('Clone') {
             steps {
-                git 'https://github.com/Saiteja13081/jenkins-app.git'
+                git 'https://github.com/Saiteja13081/jenkins-app.git' 
             }
         }
 
-        stage('Install') {
+        stage('Build') {
             steps {
                 sh 'npm install'
             }
         }
 
-        stage('Run App') {
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t $DOCKER_IMAGE .'
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                sh 'docker push $DOCKER_IMAGE'
+            }
+        }
+
+        stage('Deploy') {
             steps {
                 sh '''
-                pkill node || true
-                nohup node app.js &
+                docker stop myapp || true
+                docker rm myapp || true
+                docker run -d -p 3000:3000 --name myapp $DOCKER_IMAGE
                 '''
             }
         }
